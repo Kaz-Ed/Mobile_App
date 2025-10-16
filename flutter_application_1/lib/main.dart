@@ -10,12 +10,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
+      title: 'Flutter Widgets Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -29,62 +35,201 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _printMessage() {
+    print(123);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Demo Widgets'),
+        title: const Text('Демонстрация Flutter Виджетов'),
       ),
       body: Column(
         children: [
-          // Row с разноцветными Container и Text
+          // Первый Row с spaceEvenly
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Row с mainAxisAlignment: spaceEvenly',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
+            ),
+          ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Container(
-                height: 50,
-                width: 50,
-                color: Colors.red,
-                child: const Text('1'),
+                width: 80,
+                height: 60,
+                color: Colors.red[300],
+                child: const Center(
+                  child: Text(
+                    '1',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
               Container(
-                height: 50,
-                width: 50,
-                color: Colors.green,
-                child: const Text('2'),
+                width: 80,
+                height: 60,
+                color: Colors.green[300],
+                child: const Center(
+                  child: Text(
+                    '2',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
               Container(
-                height: 50,
-                width: 50,
-                color: Colors.blue,
-                child: const Text('3'),
+                width: 80,
+                height: 60,
+                color: Colors.blue[300],
+                child: const Center(
+                  child: Text(
+                    '3',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
 
-          // Expanded с CircleAvatar
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(
-                    'https://docs.flutter.dev/assets/images/dash/dash-fainting.gif',
+          const SizedBox(height: 30),
+
+          // Второй Row с spaceBetween
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Row с mainAxisAlignment: spaceBetween',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 90,
+                height: 70,
+                color: Colors.orange[300],
+                child: const Center(
+                  child: Text(
+                    'Start',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  'Счетчик: $_counter',
-                  style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              Container(
+                width: 90,
+                height: 70,
+                color: Colors.purple[300],
+                child: const Center(
+                  child: Text(
+                    'End',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 30),
+
+          // CircleAvatar с NetworkImage
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'CircleAvatar с NetworkImage',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[800],
+              ),
+            ),
+          ),
+          CircleAvatar(
+            radius: 60,
+            backgroundColor: Colors.grey[300],
+            backgroundImage: const NetworkImage(
+              'https://docs.flutter.dev/assets/images/dash/dash-fainting.gif',
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Expanded с основным контентом
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              color: Colors.grey[50],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Демонстрация виджетов',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 15),
+                  
+                  Text(
+                    'Счетчик: $_counter',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                 
+                  const SizedBox(height: 20),
+                  
+                  Container(
+                    width: 200,
+                    height: 4,
+                    color: Colors.blue[200],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        onPressed: () {
+          _incrementCounter();
+          _printMessage();
+        },
+        tooltip: 'Нажми меня',
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
     );
