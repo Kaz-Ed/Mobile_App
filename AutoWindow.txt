@@ -1,0 +1,435 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Book & Brew',
+      theme: ThemeData(
+        primaryColor: Color(0xFF8B4513),
+        scaffoldBackgroundColor: Color(0xFFF5F0E6),
+        fontFamily: 'Georgia',
+      ),
+      home: LoginScreen(),
+    );
+  }
+}
+
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _loginController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _loginController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _login() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Имитация задержки сети
+      await Future.delayed(Duration(seconds: 2));
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.menu_book, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Добро пожаловать в библиотеку, ${_loginController.text}!'),
+            ],
+          ),
+          backgroundColor: Color(0xFF8B4513),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF5F0E6),
+              Color(0xFFE6D7C3),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Логотип - книга и кофе
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF8B4513),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF8B4513).withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.menu_book,
+                            color: Color(0xFFF5F0E6),
+                            size: 50,
+                          ),
+                          Positioned(
+                            bottom: 20,
+                            right: 20,
+                            child: Icon(
+                              Icons.coffee,
+                              color: Color(0xFFD7CCC8),
+                              size: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    
+                    // Заголовок
+                    Text(
+                      'Book & Brew',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF5D4037),
+                        fontFamily: 'Georgia',
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Читайте с чашкой кофе',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF8D6E63),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    
+                    // Поле email/логина
+                    _buildBookStyledField(
+                      controller: _loginController,
+                      label: 'Электронная почта',
+                      icon: Icons.person_outline,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Введите электронную почту';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Введите корректный email';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    
+                    // Поле пароля
+                    _buildBookStyledField(
+                      controller: _passwordController,
+                      label: 'Пароль',
+                      icon: Icons.lock_outline,
+                      isPassword: true,
+                      isPasswordVisible: _isPasswordVisible,
+                      onTogglePassword: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Введите пароль';
+                        }
+                        if (value.length < 6) {
+                          return 'Пароль должен содержать минимум 6 символов';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    
+                    // Забыли пароль
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          // Навигация на экран восстановления пароля
+                        },
+                        child: Text(
+                          'Забыли пароль?',
+                          style: TextStyle(
+                            color: Color(0xFF8B4513),
+                            fontWeight: FontWeight.w500,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    
+                    // Кнопка входа
+                    Container(
+                      width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF8B4513),
+                            Color(0xFFA0522D),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF8B4513).withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.auto_stories, color: Colors.white, size: 20),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Открыть библиотеку',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontFamily: 'Georgia',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    
+                    // Разделитель с книжным элементом
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: Color(0xFFD7CCC8),
+                            thickness: 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Icon(
+                            Icons.bookmark_border,
+                            color: Color(0xFF8D6E63),
+                            size: 18,
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: Color(0xFFD7CCC8),
+                            thickness: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    
+                    // Альтернативные варианты входа
+                    Text(
+                      'Войти с помощью',
+                      style: TextStyle(
+                        color: Color(0xFF8D6E63),
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildSocialButton(Icons.library_books, 'Google Books'),
+                        SizedBox(width: 20),
+                        _buildSocialButton(Icons.coffee, 'Goodreads'),
+                        SizedBox(width: 20),
+                        _buildSocialButton(Icons.book_online, 'Bookmate'),
+                      ],
+                    ),
+                    SizedBox(height: 30),
+                    
+                    // Регистрация
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Нет читательского билета? ',
+                          style: TextStyle(
+                            color: Color(0xFF8D6E63),
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            // Навигация на экран регистрации
+                          },
+                          child: Text(
+                            'Зарегистрироваться',
+                            style: TextStyle(
+                              color: Color(0xFF8B4513),
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                              fontFamily: 'Georgia',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookStyledField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool isPassword = false,
+    bool isPasswordVisible = false,
+    VoidCallback? onTogglePassword,
+    required String? Function(String?) validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.brown.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        obscureText: isPassword && !isPasswordVisible,
+        style: TextStyle(
+          fontFamily: 'Georgia',
+          color: Color(0xFF5D4037),
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+            color: Color(0xFF8D6E63),
+            fontFamily: 'Georgia',
+          ),
+          prefixIcon: Icon(icon, color: Color(0xFF8B4513)),
+          suffixIcon: isPassword
+              ? IconButton(
+                  icon: Icon(
+                    isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    color: Color(0xFF8B4513),
+                  ),
+                  onPressed: onTogglePassword,
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+        validator: validator,
+      ),
+    );
+  }
+
+  Widget _buildSocialButton(IconData icon, String tooltip) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.brown.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Color(0xFF8B4513)),
+        onPressed: () {},
+        tooltip: tooltip,
+      ),
+    );
+  }
+}
