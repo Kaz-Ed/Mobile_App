@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/book_model.dart';
 import '../widgets/book_card.dart';
 
@@ -9,47 +10,143 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final SupabaseClient supabase = Supabase.instance.client;
   int _currentIndex = 0;
+  List<Book> _recommendedBooks = [];
+  bool _isLoading = true;
+  String? _userEmail;
 
-  // Пример данных для рекомендаций
-  final List<Book> _recommendedBooks = [
-    Book(
-      title: 'Мастер и Маргарита',
-      author: 'Михаил Булгаков',
-      coverColor: Color(0xFF8B4513),
-      rating: 4.8,
-    ),
-    Book(
-      title: '1984',
-      author: 'Джордж Оруэлл',
-      coverColor: Color(0xFF5D4037),
-      rating: 4.7,
-    ),
-    Book(
-      title: 'Три товарища',
-      author: 'Эрих Мария Ремарк',
-      coverColor: Color(0xFFA0522D),
-      rating: 4.6,
-    ),
-    Book(
-      title: 'Маленький принц',
-      author: 'Антуан де Сент-Экзюпери',
-      coverColor: Color(0xFFD2691E),
-      rating: 4.9,
-    ),
-    Book(
-      title: 'Преступление и наказание',
-      author: 'Фёдор Достоевский',
-      coverColor: Color(0xFF8D6E63),
-      rating: 4.5,
-    ),
-    Book(
-      title: 'Гордость и предубеждение',
-      author: 'Джейн Остин',
-      coverColor: Color(0xFFBCAAA4),
-      rating: 4.4,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _loadBooks();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = supabase.auth.currentUser;
+    setState(() {
+      _userEmail = user?.email;
+    });
+  }
+
+  Future<void> _loadBooks() async {
+    try {
+      // Получаем книги из Supabase
+      final response = await supabase
+          .from('books')
+          .select()
+          .limit(6)
+          .order('rating', ascending: false);
+
+      setState(() {
+        _recommendedBooks = (response as List)
+            .map((book) => Book(
+                  title: book['title'] ?? 'Без названия',
+                  author: book['author'] ?? 'Неизвестный автор',
+                  coverColor: _getColorFromString(book['cover_color'] ?? '8B4513'),
+                  rating: (book['rating'] ?? 0.0).toDouble(),
+                  imageUrl: book['image_url'],
+                ))
+            .toList();
+        _isLoading = false;
+      });
+    } catch (error) {
+      print('Ошибка загрузки книг: $error');
+      // Если нет таблицы, используем тестовые данные
+      _loadSampleBooks();
+    }
+  }
+
+  void _loadSampleBooks() {
+    setState(() {
+      _recommendedBooks = [
+        Book(
+          title: 'Мастер и Маргарита',
+          author: 'Михаил Булгаков',
+          coverColor: Color(0xFF8B4513),
+          rating: 4.8,
+        ),
+        Book(
+          title: '1984',
+          author: 'Джордж Оруэлл',
+          coverColor: Color(0xFF5D4037),
+          rating: 4.7,
+        ),
+        Book(
+          title: 'Три товарища',
+          author: 'Эрих Мария Ремарк',
+          coverColor: Color(0xFFA0522D),
+          rating: 4.6,
+        ),
+        Book(
+          title: 'Маленький принц',
+          author: 'Антуан де Сент-Экзюпери',
+          coverColor: Color(0xFFD2691E),
+          rating: 4.9,
+        ),
+        Book(
+          title: 'Преступление и наказание',
+          author: 'Фёдор Достоевский',
+          coverColor: Color(0xFF8D6E63),
+          rating: 4.5,
+        ),
+        Book(
+          title: 'Гордость и предубеждение',
+          author: 'Джейн Остин',
+          coverColor: Color(0xFFBCAAA4),
+          rating: 4.4,
+        ),
+      ];
+      _isLoading = false;
+    });
+  }
+
+  Color _getColorFromString(String colorStr) {
+    try {
+      return Color(int.parse(colorStr.replaceFirst('#', '0xff')));
+    } catch (e) {
+      return Color(0xFF8B4513); // Цвет по умолчанию
+    }
+  }
+
+  Future<void> _searchBooks(String query) async {
+    if (query.isEmpty) {
+      _loadBooks();
+      return;
+    }
+
+    try {
+      final response = await supabase
+          .from('books')
+          .select()
+          .ilike('title', '%$query%')
+          .order('rating', ascending: false);
+
+      setState(() {
+        _recommendedBooks = (response as List)
+            .map((book) => Book(
+                  title: book['title'] ?? 'Без названия',
+                  author: book['author'] ?? 'Неизвестный автор',
+                  coverColor: _getColorFromString(book['cover_color'] ?? '8B4513'),
+                  rating: (book['rating'] ?? 0.0).toDouble(),
+                  imageUrl: book['image_url'],
+                ))
+            .toList();
+      });
+    } catch (error) {
+      print('Ошибка поиска: $error');
+    }
+  }
+
+  Future<void> _logout() async {
+    try {
+      await supabase.auth.signOut();
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (error) {
+      print('Ошибка выхода: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,16 +176,41 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                       ],
                     ),
-                    child: IconButton(
+                    child: PopupMenuButton<String>(
                       icon: Icon(
                         Icons.person,
                         color: Colors.white,
                         size: 30,
                       ),
-                      onPressed: () {
-                        // Переход в личный кабинет
-                        print('Переход в личный кабинет');
+                      onSelected: (value) {
+                        if (value == 'logout') {
+                          _logout();
+                        }
                       },
+                      itemBuilder: (context) => [
+                        if (_userEmail != null)
+                          PopupMenuItem(
+                            value: 'user',
+                            enabled: false,
+                            child: Text(
+                              _userEmail!,
+                              style: TextStyle(
+                                color: Color(0xFF8B4513),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        PopupMenuItem(
+                          value: 'logout',
+                          child: Row(
+                            children: [
+                              Icon(Icons.logout, color: Color(0xFF8B4513)),
+                              SizedBox(width: 8),
+                              Text('Выйти'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(width: 16),
@@ -120,15 +242,20 @@ class _MainScreenState extends State<MainScreen> {
                             Icons.search,
                             color: Color(0xFF8B4513),
                           ),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(Icons.clear, color: Color(0xFF8B4513)),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _searchBooks('');
+                                  },
+                                )
+                              : null,
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 20),
                         ),
-                        onChanged: (value) {
-                          // Логика поиска
-                        },
-                        onSubmitted: (value) {
-                          // Обработка поискового запроса
-                        },
+                        onChanged: _searchBooks,
+                        onSubmitted: _searchBooks,
                       ),
                     ),
                   ),
@@ -171,20 +298,26 @@ class _MainScreenState extends State<MainScreen> {
               SizedBox(height: 20),
               
               // Сетка рекомендаций
-              GridView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.7,
-                ),
-                itemCount: _recommendedBooks.length,
-                itemBuilder: (context, index) {
-                  return BookCard(book: _recommendedBooks[index]);
-                },
-              ),
+              _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF8B4513),
+                      ),
+                    )
+                  : GridView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.7,
+                      ),
+                      itemCount: _recommendedBooks.length,
+                      itemBuilder: (context, index) {
+                        return BookCard(book: _recommendedBooks[index]);
+                      },
+                    ),
             ],
           ),
         ),
