@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -8,35 +9,77 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _loginController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  
+  final SupabaseClient supabase = Supabase.instance.client;
 
   @override
   void dispose() {
-    _loginController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _login() async {
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Имитация задержки сети
-      await Future.delayed(Duration(seconds: 2));
+      try {
+        // Авторизация через Supabase
+        final response = await supabase.auth.signInWithPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
 
-      setState(() {
-        _isLoading = false;
-      });
+        if (response.user != null) {
+          // Успешная авторизация, переходим на главный экран
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainScreen()),
+          );
+        }
+      } catch (error) {
+        // Обработка ошибок
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка авторизации: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
-      // Переход на главный экран после успешной авторизации
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainScreen()),
+  Future<void> _signUp() async {
+    try {
+      final response = await supabase.auth.signUp(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      
+      if (response.user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Регистрация успешна! Проверьте вашу почту.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ошибка регистрации: $error'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -123,11 +166,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 40),
                     
-                    // Поле email/логина
+                    // Поле email
                     _buildBookStyledField(
-                      controller: _loginController,
+                      controller: _emailController,
                       label: 'Электронная почта',
-                      icon: Icons.person_outline,
+                      icon: Icons.email_outlined,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Введите электронную почту';
@@ -161,25 +204,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         }
                         return null;
                       },
-                    ),
-                    SizedBox(height: 10),
-                    
-                    // Забыли пароль
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          // Навигация на экран восстановления пароля
-                        },
-                        child: Text(
-                          'Забыли пароль?',
-                          style: TextStyle(
-                            color: Color(0xFF8B4513),
-                            fontWeight: FontWeight.w500,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
                     ),
                     SizedBox(height: 30),
                     
@@ -229,7 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Icon(Icons.auto_stories, color: Colors.white, size: 20),
                                   SizedBox(width: 12),
                                   Text(
-                                    'Открыть библиотеку',
+                                    'Войти',
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -239,6 +263,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ],
                               ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    
+                    // Кнопка регистрации
+                    TextButton(
+                      onPressed: _isLoading ? null : _signUp,
+                      child: Text(
+                        'Создать аккаунт',
+                        style: TextStyle(
+                          color: Color(0xFF8B4513),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
                   ],
